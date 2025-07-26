@@ -2,7 +2,6 @@
 
 A Bash script that parses your personal IMDb CSV list and enriches each entry using the OMDb API, generating well-structured Markdown files for use in Obsidian.
 
----
 
 ## Features
 
@@ -18,7 +17,6 @@ A Bash script that parses your personal IMDb CSV list and enriches each entry us
 - Caches OMDb API responses to avoid redundant requests
 - Skips writing files if the content hasn’t changed
 
----
 
 ## Output Structure
 
@@ -38,7 +36,6 @@ Each `.md` file contains:
 - Poster preview
 - Summary block with plot and IMDb link
 
----
 
 ## ⚙ Requirements
 
@@ -51,7 +48,6 @@ Each `.md` file contains:
 - **macOS:** `brew install jq`
 - **Ubuntu/Debian:** `sudo apt install jq`
 
----
 
 ## Get Your OMDb API Key
 
@@ -59,7 +55,6 @@ Each `.md` file contains:
 2. Request a **free** API key
 3. Once received by email, paste it into the script under the `OMDB_API_KEY` variable
 
----
 
 ## Exporting Your IMDb Ratings
 
@@ -69,7 +64,6 @@ Each `.md` file contains:
 4. Download the `.csv` file (e.g., `ratings.csv`) and rename it to `imdb_list.csv`
 5. Place the CSV in the same folder as the script
 
----
 
 ## Configuration
 
@@ -81,7 +75,6 @@ OMDB_API_KEY="your_key_here"                 # Your OMDb API Key
 OUTPUT_DIR="/path/to/your/obsidian/vault"    # Your Obsidian vault path
 ```
 
----
 
 ## Usage
 
@@ -94,7 +87,6 @@ chmod +x imdb_import_from_csv.sh
 
 The script will process all titles, enrich them using the OMDb API, and create Markdown files in your Obsidian vault.
 
----
 
 ## Notes
 
@@ -103,7 +95,6 @@ The script will process all titles, enrich them using the OMDb API, and create M
 - Skipped entries will be logged if metadata is missing
 - You can re-run the script anytime without overwriting unchanged files
 
----
 
 ## Tested With
 
