@@ -20,12 +20,12 @@
 CSV_FILE="imdb_list.csv"  # Exported from IMDb
 # Request your API Key: https://www.omdbapi.com/apikey.aspx
 OMDB_API_KEY="omdb_key" # Your OMDB API Key
-
+IS_WATCHLIST_MODE=false
 # OMDb caching setup
 CACHE_DIR="$HOME/.omdb_cache"
 CACHE_EXPIRY_DAYS=30
 mkdir -p "$CACHE_DIR"
-OUTPUT_DIR="/Users/myuser/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV" # Obsidian Vault Location for the IMDB entries
+OUTPUT_DIR="/Users/my_user/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV" # Obsidian Vault Location for the IMDB entries
 # -------------------------------------------
 
 echo "🚀 Script started using Bash version: $BASH_VERSION"
@@ -35,7 +35,14 @@ if [[ ! -f "$CSV_FILE" ]]; then
   exit 1
 fi
 
+for arg in "$@"; do
+  if [[ "$arg" == "--watchlist" ]]; then
+    IS_WATCHLIST_MODE=true
+  fi
+done
+
 mkdir -p "$OUTPUT_DIR"
+
 
 # --- CSV Parsing and Rating Map ---
 # Read the CSV and extract IMDb IDs and user ratings.
@@ -49,15 +56,21 @@ mapfile -t csv_lines < <(tail -n +2 "$CSV_FILE")
 for line in "${csv_lines[@]}"; do
   IFS=',' read -r -a fields <<< "$line"
 
-  imdbID=$(echo "${fields[0]}" | tr -d '"')
-  userRating=$(echo "${fields[1]}" | tr -d '"')
+  # Adaptive block for both Ratings and Watchlist CSV formats
+  if [[ "$IS_WATCHLIST_MODE" == true ]]; then
+    imdbID=$(echo "${fields[1]}" | tr -d '"') # Const is column 2 in Watchlist
+    userRating=-1
+  else
+    imdbID=$(echo "${fields[0]}" | tr -d '"') # Const is column 1 in Ratings CSV
+    userRating=$(echo "${fields[1]}" | tr -d '"')
+  fi
 
   if [[ ! "$userRating" =~ ^[0-9]+$ ]]; then
     # echo "🔍 Skipping due to invalid rating string → Extracted: '$userRating'"
     :
   fi
 
-  if [[ ! "$imdbID" =~ ^tt[0-9]+$ || ! "$userRating" =~ ^[0-9]+$ ]]; then
+  if [[ ! "$imdbID" =~ ^tt[0-9]+$ || ( "$IS_WATCHLIST_MODE" == false && ! "$userRating" =~ ^[0-9]+$ ) ]]; then
     # echo "⏭️  Skipping entry due to invalid ID or rating → ID: '$imdbID', Rating: '$userRating'"
     continue
   fi
@@ -98,7 +111,7 @@ for ID in "${IMDB_IDS[@]}"; do
 
   if [[ "$FETCH_NEW_DATA" == true ]]; then
     DATA=$(curl -s "https://www.omdbapi.com/?i=$ID&apikey=$OMDB_API_KEY")
-    echo "$DATA" | jq --arg rating "${RATING_MAP[$ID]}" '. + {yourRating: $rating}' > "$CACHE_FILE"
+    echo "$DATA" | jq --arg rating "${RATING_MAP[$ID]}" '. + {yourRating: ($rating | tonumber? // null)}' > "$CACHE_FILE"
   fi
 
   TITLE=$(echo "$DATA" | jq -r '.Title')
@@ -192,7 +205,26 @@ for ID in "${IMDB_IDS[@]}"; do
   fi
 
   YOUR_RATING="${RATING_MAP[$ID]}"
-  # echo "🎯 Your rating for $ID is: $YOUR_RATING"
+  # Attempt to preserve existing progress status from previously written files
+  # Determine progress value
+  if [[ -f "$FILENAME" ]]; then
+    PROGRESS_VALUE=$(grep '^progress:' "$FILENAME" | sed 's/progress: "\(.*\)"/\1/')
+  fi
+
+  # Set progress status based on context:
+  # - If running in watchlist mode → default to "Backlog"
+  # - If user rating exists and is >= 1 → assume "Completed"
+  # - Otherwise → fallback to "Backlog"
+  if [[ -z "$PROGRESS_VALUE" ]]; then
+    if [[ "$IS_WATCHLIST_MODE" == true ]]; then
+      PROGRESS_VALUE="Backlog"
+    elif [[ "$YOUR_RATING" =~ ^[0-9]+$ && "$YOUR_RATING" -ge 1 ]]; then
+      PROGRESS_VALUE="Completed"
+    else
+      PROGRESS_VALUE="Backlog"
+    fi
+  fi
+
   SAFE_TITLE=$(echo "$TITLE" | tr '/' '_' | tr -d '":*?<>|')
 
   if [[ "$TYPE" == "series" ]]; then
@@ -205,23 +237,19 @@ for ID in "${IMDB_IDS[@]}"; do
 
   FILENAME="${FINAL_OUTPUT_DIR}/${TITLE}.md"
 
-  # Retain existing progress value if file exists
-  if [[ -f "$FILENAME" ]]; then
-    PROGRESS_VALUE=$(grep '^progress:' "$FILENAME" | sed 's/progress: "\(.*\)"/\1/')
-  fi
-
   # --- Markdown File Generation ---
   # Format all retrieved data into a Markdown front matter and body.
   # Skip writing if no content has changed.
 
+  # Always ensure progress value is written with a fallback to "Backlog" in YAML
   NEW_CONTENT=$(cat <<EOF
 ---
 title: "$TITLE"
 year: "$YEAR"
 imdbID: "$ID"
 imdbRating: "$RATING"
-yourRating: $YOUR_RATING
-progress: "$PROGRESS_VALUE"
+yourRating: $( [[ "$YOUR_RATING" -ge 0 ]] 2>/dev/null && echo "$YOUR_RATING" || echo "null" )
+progress: "$( [[ -n "$PROGRESS_VALUE" ]] && echo "$PROGRESS_VALUE" || echo "Backlog" )"
 type: "$TYPE"
 runtime: "$RUNTIME"
 genres: [$(echo "$GENRE" | awk -F, '{for(i=1;i<=NF;i++) printf "\"%s\", ", $i}' | sed 's/, $//')]
@@ -268,3 +296,6 @@ done
 # --- Completion Message ---
 
 echo "✅ Finished! Markdown files saved to: $OUTPUT_DIR"
+if [[ "$IS_WATCHLIST_MODE" == true ]]; then
+  echo "ℹ️  Watchlist mode enabled — Ratings were not applied."
+fi
