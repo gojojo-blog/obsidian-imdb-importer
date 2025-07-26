@@ -85,6 +85,19 @@ chmod +x imdb_import_from_csv.sh
 ./imdb_import_from_csv.sh
 ```
 
+Usage
+```bash
+bash imdb_import_from_csv.sh [--watchlist]
+```
+Example (Ratings CSV):
+```bash
+bash imdb_import_from_csv.sh
+```
+Example (Watchlist CSV):
+```bash
+bash imdb_import_from_csv.sh --watchlist
+```
+
 The script will process all titles, enrich them using the OMDb API, and create Markdown files in your Obsidian vault.
 
 
@@ -94,7 +107,11 @@ The script will process all titles, enrich them using the OMDb API, and create M
 - OMDb responses are cached for 30 days in `~/.omdb_cache`
 - Skipped entries will be logged if metadata is missing
 - You can re-run the script anytime without overwriting unchanged files
-
+- The script determines the progress field as follows:
+  - If --watchlist is passed → progress: "Backlog"
+  - If your rating exists and is >= 1 → progress: "Completed"
+  - Otherwise → defaults to Backlog
+- It does not overwrite the progress: field if it already exists in the markdown file.
 
 ## Tested With
 
