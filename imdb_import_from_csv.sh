@@ -2,7 +2,7 @@
 
 # Tested with:
 # - Bash version: 5.1.16(1)-release
-# - macOS version: macOS 13.4 Ventura (Apple Silicon)
+# - macOS version: macOS 15.5 Sequoia (Apple Silicon)
 
 # -----------------------------------------------------------------------------
 # Script Name : imdb_import_from_csv.sh
