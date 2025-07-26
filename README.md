@@ -108,6 +108,4 @@ The script will process all titles, enrich them using the OMDb API, and create M
 ## Tested With
 
 - **Bash**: 5.1.16(1)-release
-- **macOS**: Ventura 13.4 (Apple Silicon)
-
----
+- **macOS**: Sequoia 15.5 (Apple Silicon)
