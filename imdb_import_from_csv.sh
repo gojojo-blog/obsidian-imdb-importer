@@ -25,7 +25,7 @@ IS_WATCHLIST_MODE=false
 CACHE_DIR="$HOME/.omdb_cache"
 CACHE_EXPIRY_DAYS=30
 mkdir -p "$CACHE_DIR"
-OUTPUT_DIR="/Users/my_user/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV" # Obsidian Vault Location for the IMDB entries
+OUTPUT_DIR="/Users/my_user/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV" # Obsidian Vault Location for the IMDb entries
 # -------------------------------------------
 
 echo "🚀 Script started using Bash version: $BASH_VERSION"
