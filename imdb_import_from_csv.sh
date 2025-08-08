@@ -205,6 +205,17 @@ for ID in "${IMDB_IDS[@]}"; do
   fi
 
   YOUR_RATING="${RATING_MAP[$ID]}"
+  SAFE_TITLE=$(echo "$TITLE" | tr '/' '_' | tr -d '":*?<>|')
+
+  if [[ "$TYPE" == "series" ]]; then
+    FINAL_OUTPUT_DIR="/Users/joelplourde/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV/01 - TV Shows"
+  else
+    FINAL_OUTPUT_DIR="/Users/joelplourde/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV/02 - Movies"
+  fi
+
+  mkdir -p "$FINAL_OUTPUT_DIR"
+
+  FILENAME="${FINAL_OUTPUT_DIR}/${TITLE}.md"
   # Attempt to preserve existing progress status from previously written files
   # Determine progress value
   if [[ -f "$FILENAME" ]]; then
@@ -225,17 +236,6 @@ for ID in "${IMDB_IDS[@]}"; do
     fi
   fi
 
-  SAFE_TITLE=$(echo "$TITLE" | tr '/' '_' | tr -d '":*?<>|')
-
-  if [[ "$TYPE" == "series" ]]; then
-    FINAL_OUTPUT_DIR="/Users/joelplourde/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV/01 - TV Shows"
-  else
-    FINAL_OUTPUT_DIR="/Users/joelplourde/Documents/Obsidian/Vaults/Jojo/04 - Entertainment/01 - TV/02 - Movies"
-  fi
-
-  mkdir -p "$FINAL_OUTPUT_DIR"
-
-  FILENAME="${FINAL_OUTPUT_DIR}/${TITLE}.md"
 
   # --- Markdown File Generation ---
   # Format all retrieved data into a Markdown front matter and body.
